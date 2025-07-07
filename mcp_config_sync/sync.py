@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .apps import get_all_apps, get_app_names, get_config_paths_for_apps
+from .apps import get_all_apps, get_config_paths_for_apps
 
 logger = logging.getLogger(__name__)
 
