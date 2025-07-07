@@ -6,7 +6,7 @@ Follows Python >=3.12 requirements and includes comprehensive path validation.
 
 import os
 import re
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Union, Optional
 from urllib.parse import unquote
 
