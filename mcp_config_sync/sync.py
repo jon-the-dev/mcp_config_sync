@@ -86,7 +86,7 @@ class MCPServerSync:
         """
         try:
             with open(file_path, "r", encoding="utf-8") as f:
-                config = json.load(f)
+                config: Dict[str, Any] = json.load(f)
                 logger.debug(f"Successfully parsed: {file_path}")
                 return config
         except json.JSONDecodeError as e:
@@ -109,7 +109,7 @@ class MCPServerSync:
         Returns:
             Dictionary of MCP server configurations
         """
-        servers = {}
+        servers: Dict[str, Dict[str, Any]] = {}
 
         # Look for mcpServers key specifically
         if "mcpServers" in config and isinstance(config["mcpServers"], dict):
@@ -124,8 +124,8 @@ class MCPServerSync:
         """
         Combine MCP servers from all existing configuration files.
         """
-        all_servers = {}
-        server_sources = {}
+        all_servers: Dict[str, Dict[str, Any]] = {}
+        server_sources: Dict[str, str] = {}
 
         for config_file in self.existing_files:
             config = self.parse_config_file(config_file)
@@ -314,7 +314,7 @@ class MCPServerSync:
         """
         from .apps import get_app
 
-        info = {
+        info: Dict[str, Any] = {
             "selected_apps": [],
             "config_files": self.config_files,
             "using_custom_files": len(self.selected_apps) == 0,

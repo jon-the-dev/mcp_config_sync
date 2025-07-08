@@ -9,7 +9,6 @@ import logging
 import sys
 from pathlib import Path
 
-
 from .apps import get_all_apps, get_app_names, get_existing_apps, validate_app_names
 from .sync import MCPServerSync
 
