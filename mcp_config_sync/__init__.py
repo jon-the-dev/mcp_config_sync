@@ -5,7 +5,7 @@ A Python package for synchronizing Model Context Protocol (MCP) server
 configurations across different AI tools and applications.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "Jon"
 __email__ = "jon@zer0day.net"
 

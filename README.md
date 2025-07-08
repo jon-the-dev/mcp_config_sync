@@ -49,6 +49,9 @@ mcp-config-sync
 # Actually sync all registered MCP applications
 mcp-config-sync --sync
 
+# Show version information
+mcp-config-sync --version
+
 # List all available MCP applications
 mcp-config-sync --list-apps
 
