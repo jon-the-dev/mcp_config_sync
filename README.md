@@ -377,6 +377,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### v0.2.0 (2025-01-08)
+- **BREAKING CHANGE**: Default behavior now shows preview instead of performing sync
+- Added `--sync` flag to actually perform destructive operations
+- Added detailed diff preview showing what changes would be made
+- Deprecated `--dry-run` flag in favor of default preview behavior
+- Updated help text and documentation with new usage examples
+- Maintains backward compatibility with deprecation warnings
+
 ### v0.1.0 (2025-01-07)
 - Initial release
 - Basic MCP server synchronization functionality
