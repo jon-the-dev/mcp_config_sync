@@ -9,6 +9,7 @@ import logging
 import sys
 from pathlib import Path
 
+from . import __version__
 from .apps import get_all_apps, get_app_names, get_existing_apps, validate_app_names
 from .sync import MCPServerSync
 
@@ -122,6 +123,7 @@ def print_summary(syncer: MCPServerSync) -> None:
     print("\n" + "=" * 60)
     print("MCP SERVER SYNCHRONIZATION SUMMARY")
     print("=" * 60)
+    print(f"Version: mcp-config-sync {__version__}")
 
     # Show selected apps information
     apps_info = syncer.get_selected_apps_info()
@@ -256,6 +258,14 @@ Examples:
   mcp-config-sync --remove server-name --sync  # Actually remove server
   mcp-config-sync --no-backup --sync       # Sync without creating backups
         """,
+    )
+
+    # Version argument
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"mcp-config-sync {__version__}",
+        help="Show version information and exit",
     )
 
     # Action arguments (mutually exclusive)
