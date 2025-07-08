@@ -161,6 +161,73 @@ def print_summary(syncer: MCPServerSync) -> None:
     print("\n" + "=" * 60)
 
 
+def print_diff_preview(syncer: MCPServerSync) -> None:
+    """
+    Print a preview of what changes would be made during sync.
+
+    Args:
+        syncer: MCPServerSync instance
+    """
+    print("\n" + "=" * 60)
+    print("PREVIEW: CHANGES THAT WOULD BE MADE")
+    print("=" * 60)
+
+    unified_config = syncer.generate_unified_config()
+    apps_info = syncer.get_selected_apps_info()
+    
+    print(f"\nThe following {len(apps_info['config_files'])} files would be updated:")
+    
+    for file_path_str in apps_info["config_files"]:
+        file_path = Path(file_path_str).expanduser()
+        print(f"\n📄 File: {file_path}")
+        
+        if file_path.exists():
+            print("   Status: ✓ EXISTS - would be updated")
+            if syncer.backup:
+                backup_path = file_path.with_suffix(f"{file_path.suffix}.backup")
+                print(f"   Backup: would create {backup_path}")
+            
+            # Show current vs new server count
+            try:
+                current_config = syncer.parse_config_file(file_path)
+                current_servers = syncer.extract_mcp_servers(current_config, file_path.name)
+                print(f"   Current servers: {len(current_servers)}")
+                print(f"   New servers: {len(unified_config['mcpServers'])}")
+                
+                # Show servers that would be added
+                new_servers = set(unified_config['mcpServers'].keys()) - set(current_servers.keys())
+                if new_servers:
+                    print(f"   Would add: {', '.join(sorted(new_servers))}")
+                
+                # Show servers that would be removed
+                removed_servers = set(current_servers.keys()) - set(unified_config['mcpServers'].keys())
+                if removed_servers:
+                    print(f"   Would remove: {', '.join(sorted(removed_servers))}")
+                    
+                # Show servers that would be updated
+                updated_servers = []
+                for server_name in set(current_servers.keys()) & set(unified_config['mcpServers'].keys()):
+                    if current_servers[server_name] != unified_config['mcpServers'][server_name]:
+                        updated_servers.append(server_name)
+                if updated_servers:
+                    print(f"   Would update: {', '.join(sorted(updated_servers))}")
+                    
+            except Exception as e:
+                print(f"   Error analyzing current config: {e}")
+        else:
+            print("   Status: ✗ MISSING - would be created")
+            print(f"   New servers: {len(unified_config['mcpServers'])}")
+    
+    print(f"\n📊 Summary:")
+    print(f"   Total files to update: {len(apps_info['config_files'])}")
+    print(f"   Total servers in unified config: {len(unified_config['mcpServers'])}")
+    print(f"   Backup enabled: {'Yes' if syncer.backup else 'No'}")
+    
+    print("\n" + "=" * 60)
+    print("💡 To apply these changes, run the command again with --sync")
+    print("=" * 60)
+
+
 def create_parser() -> argparse.ArgumentParser:
     """
     Create and configure the argument parser.
@@ -173,19 +240,21 @@ def create_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 This script reads from JSON configuration files, combines all unique
-MCP servers, and replaces all original files with the unified configuration.
+MCP servers, and shows a preview of changes by default.
 
 Available applications:
 {chr(10).join(f'  {name}: {get_all_apps()[name].display_name}' for name in sorted(get_app_names()))}
 
 Examples:
-  mcp-config-sync                           # Sync all registered apps
-  mcp-config-sync --apps amazonq cline     # Sync specific apps only
+  mcp-config-sync                           # Preview changes for all registered apps
+  mcp-config-sync --sync                    # Actually sync all registered apps
+  mcp-config-sync --apps amazonq cline     # Preview changes for specific apps
+  mcp-config-sync --apps amazonq --sync    # Sync specific apps only
   mcp-config-sync --list-apps              # Show available apps
   mcp-config-sync --list-all               # List all MCP servers
-  mcp-config-sync --remove server-name     # Remove a specific server
-  mcp-config-sync --no-backup              # Skip creating backups
-  mcp-config-sync --verbose --dry-run      # Preview changes
+  mcp-config-sync --remove server-name     # Preview server removal
+  mcp-config-sync --remove server-name --sync  # Actually remove server
+  mcp-config-sync --no-backup --sync       # Sync without creating backups
         """,
     )
 
@@ -228,6 +297,12 @@ Examples:
 
     # Option arguments
     parser.add_argument(
+        "--sync",
+        action="store_true",
+        help="Actually perform the synchronization (destructive). Without this flag, only shows preview.",
+    )
+
+    parser.add_argument(
         "--no-backup",
         action="store_true",
         help="Skip creating backup files before modification",
@@ -236,7 +311,7 @@ Examples:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Show what would be done without making changes (not applicable to --list-* commands)",
+        help="Show what would be done without making changes (deprecated: use default behavior instead)",
     )
 
     parser.add_argument(
@@ -304,7 +379,27 @@ def main() -> None:
                 logger.error("No MCP servers found in any existing configuration files")
                 sys.exit(1)
 
+            if not args.sync:
+                # Preview mode for removal
+                if args.remove in servers:
+                    print(
+                        f"\n[PREVIEW] Would remove server '{args.remove}' from all configuration files"
+                    )
+                    print(f"Server '{args.remove}' is currently configured with:")
+                    server_config = servers[args.remove]
+                    for key, value in server_config.items():
+                        print(f"  {key}: {value}")
+                    print(f"After removal, {len(servers) - 1} servers would remain")
+                    print("\n💡 To actually remove this server, run the command again with --sync")
+                else:
+                    print(
+                        f"\n[PREVIEW] Server '{args.remove}' not found in current configuration"
+                    )
+                return
+
+            # Actually perform removal
             if args.dry_run:
+                logger.warning("--dry-run is deprecated. Use default behavior for preview mode.")
                 if args.remove in servers:
                     print(
                         f"\n[DRY RUN] Would remove server '{args.remove}' from all configuration files"
@@ -347,7 +442,15 @@ def main() -> None:
         # Print summary
         print_summary(syncer)
 
+        # Check if we should actually perform sync or just show preview
+        if not args.sync:
+            # Default behavior: show preview
+            print_diff_preview(syncer)
+            return
+
+        # Handle deprecated --dry-run flag
         if args.dry_run:
+            logger.warning("--dry-run is deprecated. Use default behavior for preview mode.")
             print("\n[DRY RUN] No files were modified")
             apps_info = syncer.get_selected_apps_info()
             print(
@@ -355,7 +458,7 @@ def main() -> None:
             )
             return
 
-        # Replace all configurations with unified config
+        # Actually perform the sync
         results = syncer.replace_all_configs()
 
         # Print results
