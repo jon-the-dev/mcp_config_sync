@@ -43,6 +43,14 @@ MCP_APPS: Dict[str, MCPApp] = {
         description="Anthropic Claude Desktop application",
         homepage="https://claude.ai/",
     ),
+    "cursor": MCPApp(
+        name="cursor",
+        display_name="Cursor",
+        config_path="~/Library/Application Support/Cursor/User/settings.json",
+        description="AI-powered code editor with MCP support",
+        homepage="http://cursor.com",
+    ),
+  
 }
 
 
