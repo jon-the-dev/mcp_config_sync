@@ -10,14 +10,5 @@ skips =
 # Exclude test files and virtual environments
 exclude_dirs = tests,venv,.venv,env,.env,build,dist
 
-# Severity level
-severity = medium
-
-# Confidence level
-confidence = medium
-
-# Output format
-format = json
-
 # Include line numbers
 include_line_numbers = true
