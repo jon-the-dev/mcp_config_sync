@@ -1,0 +1,70 @@
+rules:
+  - id: path-traversal-open
+    patterns:
+      - pattern-either:
+          - pattern: open($USER_INPUT, ...)
+          - pattern: open(..., $USER_INPUT, ...)
+          - pattern: pathlib.Path($USER_INPUT).open(...)
+          - pattern: io.open($USER_INPUT, ...)
+      - pattern-not: open("...", ...)
+      - pattern-not: open($CONST, ...)
+    message: |
+      Potential path traversal vulnerability. User input is being used directly 
+      in file operations without proper validation. This could allow attackers 
+      to access files outside the intended directory.
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')"
+      owasp: "A01:2021 - Broken Access Control"
+
+  - id: path-traversal-os-path
+    patterns:
+      - pattern-either:
+          - pattern: os.path.join($BASE, $USER_INPUT)
+          - pattern: os.path.join($USER_INPUT, ...)
+          - pattern: pathlib.Path($USER_INPUT)
+          - pattern: pathlib.Path(...) / $USER_INPUT
+    message: |
+      Potential path traversal vulnerability. User input in path operations 
+      should be validated to prevent directory traversal attacks.
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-22"
+
+  - id: unsafe-file-operations
+    patterns:
+      - pattern-either:
+          - pattern: os.remove($USER_INPUT)
+          - pattern: os.unlink($USER_INPUT)
+          - pattern: os.rmdir($USER_INPUT)
+          - pattern: shutil.rmtree($USER_INPUT)
+          - pattern: os.chmod($USER_INPUT, ...)
+          - pattern: os.chown($USER_INPUT, ...)
+    message: |
+      Unsafe file operation with user input. Validate and sanitize 
+      file paths before performing destructive operations.
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22"
+
+  - id: flask-send-file-traversal
+    patterns:
+      - pattern-either:
+          - pattern: flask.send_file($USER_INPUT)
+          - pattern: send_file($USER_INPUT)
+          - pattern: flask.send_from_directory($DIR, $USER_INPUT)
+          - pattern: send_from_directory($DIR, $USER_INPUT)
+    message: |
+      Potential path traversal in Flask file serving. Validate file paths 
+      and use secure_filename() to sanitize user input.
+    languages: [python]
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22"
