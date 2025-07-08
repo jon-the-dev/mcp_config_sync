@@ -43,26 +43,32 @@ pip install -e .
 After installation, you can use the `mcp-config-sync` command:
 
 ```bash
-# Sync all registered MCP applications
+# Preview changes for all registered MCP applications (default behavior)
 mcp-config-sync
+
+# Actually sync all registered MCP applications
+mcp-config-sync --sync
 
 # List all available MCP applications
 mcp-config-sync --list-apps
 
-# Sync specific applications only
+# Preview changes for specific applications only
 mcp-config-sync --apps amazonq cline
+
+# Actually sync specific applications only
+mcp-config-sync --apps amazonq cline --sync
 
 # List all discovered MCP servers
 mcp-config-sync --list-all
 
-# Remove a specific server from all configurations
+# Preview removal of a specific server from all configurations
 mcp-config-sync --remove server-name
 
-# Preview changes without modifying files
-mcp-config-sync --dry-run
+# Actually remove a specific server from all configurations
+mcp-config-sync --remove server-name --sync
 
-# Skip creating backup files
-mcp-config-sync --no-backup
+# Skip creating backup files during sync
+mcp-config-sync --sync --no-backup
 
 # Enable verbose logging
 mcp-config-sync --verbose
@@ -179,21 +185,27 @@ MCP configuration files should contain a `mcpServers` object:
 ### Basic Synchronization
 
 ```bash
-# Sync all registered MCP applications
+# Preview changes for all registered MCP applications (default)
 mcp-config-sync
+
+# Actually sync all registered MCP applications
+mcp-config-sync --sync
 ```
 
 This will:
 1. Discover all existing MCP configuration files for registered apps
 2. Extract and combine unique MCP servers
-3. Create backups of existing files
-4. Write the unified configuration to all files
+3. Show a preview of what changes would be made (default behavior)
+4. With `--sync`: Create backups of existing files and write the unified configuration to all files
 
 ### Sync Specific Applications
 
 ```bash
-# Sync only Amazon Q and Cline
+# Preview changes for only Amazon Q and Cline
 mcp-config-sync --apps amazonq cline
+
+# Actually sync only Amazon Q and Cline
+mcp-config-sync --apps amazonq cline --sync
 ```
 
 ### List Available Applications
@@ -270,14 +282,20 @@ Found 3 MCP servers:
 ### Remove a Server
 
 ```bash
-# Remove a specific server from all configurations
+# Preview removal of a specific server from all configurations
 mcp-config-sync --remove old-server-name
+
+# Actually remove a specific server from all configurations
+mcp-config-sync --remove old-server-name --sync
 ```
 
 ### Preview Changes
 
 ```bash
-# See what would be changed without modifying files
+# See what would be changed without modifying files (default behavior)
+mcp-config-sync --verbose
+
+# The old --dry-run flag is deprecated but still works
 mcp-config-sync --dry-run --verbose
 ```
 
